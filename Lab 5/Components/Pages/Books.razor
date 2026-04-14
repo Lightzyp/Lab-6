@@ -1,0 +1,106 @@
+@page "/books"
+@inject LibraryService Library
+
+<PageTitle>Books</PageTitle>
+
+<h1>Manage Books</h1>
+
+<div class="section">
+    <h3>@(isEditing ? "Edit Book" : "Add Book")</h3>
+
+    <div class="form-grid">
+        <input @bind="bookForm.Title" placeholder="Title" />
+        <input @bind="bookForm.Author" placeholder="Author" />
+        <input @bind="bookForm.ISBN" placeholder="ISBN" />
+    </div>
+
+    <div class="button-row">
+        @if (isEditing)
+        {
+            <button @onclick="SaveEdit">Save Changes</button>
+            <button class="secondary" @onclick="CancelEdit">Cancel</button>
+        }
+        else
+        {
+            <button @onclick="AddBook">Add Book</button>
+        }
+    </div>
+</div>
+
+<div class="section">
+    <h3>Book List</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>ISBN</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var book in Library.Books.OrderBy(b => b.Id))
+            {
+                <tr>
+                    <td>@book.Id</td>
+                    <td>@book.Title</td>
+                    <td>@book.Author</td>
+                    <td>@book.ISBN</td>
+                    <td>
+                        <button class="small" @onclick="() => StartEdit(book)">Edit</button>
+                        <button class="small danger" @onclick="() => DeleteBook(book.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private Book bookForm = new();
+    private bool isEditing = false;
+
+    private void AddBook()
+    {
+        if (string.IsNullOrWhiteSpace(bookForm.Title) || string.IsNullOrWhiteSpace(bookForm.Author) || string.IsNullOrWhiteSpace(bookForm.ISBN))
+            return;
+
+        Library.AddBook(bookForm);
+        bookForm = new Book();
+    }
+
+    private void StartEdit(Book book)
+    {
+        isEditing = true;
+        bookForm = new Book
+        {
+            Id = book.Id,
+            Title = book.Title,
+            Author = book.Author,
+            ISBN = book.ISBN
+        };
+    }
+
+    private void SaveEdit()
+    {
+        Library.EditBook(bookForm);
+        CancelEdit();
+    }
+
+    private void CancelEdit()
+    {
+        isEditing = false;
+        bookForm = new Book();
+    }
+
+    private void DeleteBook(int id)
+    {
+        Library.DeleteBook(id);
+        if (bookForm.Id == id)
+        {
+            CancelEdit();
+        }
+    }
+}

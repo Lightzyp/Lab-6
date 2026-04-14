@@ -1,0 +1,102 @@
+@page "/users"
+@inject LibraryService Library
+
+<PageTitle>Users</PageTitle>
+
+<h1>Manage Users</h1>
+
+<div class="section">
+    <h3>@(isEditing ? "Edit User" : "Add User")</h3>
+
+    <div class="form-grid">
+        <input @bind="userForm.Name" placeholder="Name" />
+        <input @bind="userForm.Email" placeholder="Email" />
+    </div>
+
+    <div class="button-row">
+        @if (isEditing)
+        {
+            <button @onclick="SaveEdit">Save Changes</button>
+            <button class="secondary" @onclick="CancelEdit">Cancel</button>
+        }
+        else
+        {
+            <button @onclick="AddUser">Add User</button>
+        }
+    </div>
+</div>
+
+<div class="section">
+    <h3>User List</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Library.Users.OrderBy(u => u.Id))
+            {
+                <tr>
+                    <td>@user.Id</td>
+                    <td>@user.Name</td>
+                    <td>@user.Email</td>
+                    <td>
+                        <button class="small" @onclick="() => StartEdit(user)">Edit</button>
+                        <button class="small danger" @onclick="() => DeleteUser(user.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private User userForm = new();
+    private bool isEditing = false;
+
+    private void AddUser()
+    {
+        if (string.IsNullOrWhiteSpace(userForm.Name) || string.IsNullOrWhiteSpace(userForm.Email))
+            return;
+
+        Library.AddUser(userForm);
+        userForm = new User();
+    }
+
+    private void StartEdit(User user)
+    {
+        isEditing = true;
+        userForm = new User
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Email = user.Email
+        };
+    }
+
+    private void SaveEdit()
+    {
+        Library.EditUser(userForm);
+        CancelEdit();
+    }
+
+    private void CancelEdit()
+    {
+        isEditing = false;
+        userForm = new User();
+    }
+
+    private void DeleteUser(int id)
+    {
+        Library.DeleteUser(id);
+        if (userForm.Id == id)
+        {
+            CancelEdit();
+        }
+    }
+}

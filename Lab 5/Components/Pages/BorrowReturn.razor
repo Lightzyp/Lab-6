@@ -1,0 +1,152 @@
+@page "/borrow-return"
+@inject LibraryService Library
+
+<PageTitle>Borrow / Return</PageTitle>
+
+<h1>Borrow and Return Books</h1>
+
+<div class="section">
+    <h3>Borrow Book</h3>
+
+    <div class="form-grid">
+        <select @bind="selectedBorrowUserId">
+            <option value="0">Select User</option>
+            @foreach (var user in Library.Users.OrderBy(u => u.Name))
+            {
+                <option value="@user.Id">@user.Name</option>
+            }
+        </select>
+
+        <select @bind="selectedBorrowBookId">
+            <option value="0">Select Book</option>
+            @foreach (var book in Library.Books.OrderBy(b => b.Title))
+            {
+                <option value="@book.Id">@book.Title by @book.Author</option>
+            }
+        </select>
+    </div>
+
+    <div class="button-row">
+        <button @onclick="BorrowBook">Borrow</button>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(borrowMessage))
+    {
+        <p class="message">@borrowMessage</p>
+    }
+</div>
+
+<div class="section">
+    <h3>Return Book</h3>
+
+    <div class="form-grid">
+        <select @bind="selectedReturnUserId">
+            <option value="0">Select User</option>
+            @foreach (var user in Library.Users.OrderBy(u => u.Name))
+            {
+                <option value="@user.Id">@user.Name</option>
+            }
+        </select>
+    </div>
+
+    @if (selectedReturnUserId != 0)
+    {
+        var borrowedBooks = Library.GetBorrowedBooksByUser(selectedReturnUserId);
+
+        if (borrowedBooks.Any())
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>ISBN</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var book in borrowedBooks)
+                    {
+                        <tr>
+                            <td>@book.Id</td>
+                            <td>@book.Title</td>
+                            <td>@book.Author</td>
+                            <td>@book.ISBN</td>
+                            <td>
+                                <button class="small" @onclick="() => ReturnBook(book.Id)">Return</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>No borrowed books for this user.</p>
+        }
+    }
+
+    @if (!string.IsNullOrWhiteSpace(returnMessage))
+    {
+        <p class="message">@returnMessage</p>
+    }
+</div>
+
+<div class="section">
+    <h3>All Borrowed Books</h3>
+
+    @if (Library.BorrowedBooks.Any(kvp => kvp.Value.Any()))
+    {
+        @foreach (var entry in Library.BorrowedBooks.Where(kvp => kvp.Value.Any()))
+        {
+            var user = Library.Users.FirstOrDefault(u => u.Id == entry.Key);
+            <div class="borrowed-block">
+                <h4>@(user?.Name ?? $"User {entry.Key}")</h4>
+                <ul>
+                    @foreach (var book in entry.Value)
+                    {
+                        <li>@book.Title by @book.Author (ISBN: @book.ISBN)</li>
+                    }
+                </ul>
+            </div>
+        }
+    }
+    else
+    {
+        <p>No books are currently borrowed.</p>
+    }
+</div>
+
+@code {
+    private int selectedBorrowUserId;
+    private int selectedBorrowBookId;
+    private int selectedReturnUserId;
+    private string borrowMessage = string.Empty;
+    private string returnMessage = string.Empty;
+
+    private void BorrowBook()
+    {
+        if (selectedBorrowUserId == 0 || selectedBorrowBookId == 0)
+        {
+            borrowMessage = "Please select a user and a book.";
+            return;
+        }
+
+        var success = Library.BorrowBook(selectedBorrowUserId, selectedBorrowBookId);
+        borrowMessage = success ? "Book borrowed successfully!" : "Unable to borrow book.";
+        selectedBorrowBookId = 0;
+    }
+
+    private void ReturnBook(int bookId)
+    {
+        if (selectedReturnUserId == 0)
+        {
+            returnMessage = "Please select a user first.";
+            return;
+        }
+
+        var success = Library.ReturnBook(selectedReturnUserId, bookId);
+        returnMessage = success ? "Book returned successfully!" : "Unable to return book.";
+    }
+}
