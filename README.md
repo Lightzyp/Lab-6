@@ -36,13 +36,13 @@ Lab 6/
 - ASP.NET Core Blazor
 - C#
 - xUnit
-- .NET 10
+- .NET 8
 
 ## Getting Started
 
 ### Prerequisites
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/)
+- [.NET 8 SDK](https://dotnet.microsoft.com/)
 
 ### Run the Application
 
