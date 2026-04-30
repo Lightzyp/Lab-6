@@ -2,10 +2,12 @@ using LibraryBlazorApp.Models;
 using LibraryBlazorApp.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace LibraryBlazorApp.Tests;
 
-public class LibraryServiceTests : IDisposable
+[TestClass]
+public class LibraryServiceTests
 {
     private readonly string tempRoot;
     private readonly LibraryService service;
@@ -45,27 +47,27 @@ public class LibraryServiceTests : IDisposable
         service = new LibraryService(env);
     }
 
-    [Fact]
+    [TestMethod]
     public void ReadBooks_LoadsBooksFromCsv()
     {
         var books = service.GetBooks();
 
-        Assert.Equal(2, books.Count);
-        Assert.Contains(books, b => b.Id == 1 && b.Title == "1984");
-        Assert.Contains(books, b => b.Id == 2 && b.Author == "Frank Herbert");
+        Assert.AreEqual(2, books.Count);
+        Assert.IsTrue(books.Any(b => b.Id == 1 && b.Title == "1984"));
+        Assert.IsTrue(books.Any(b => b.Id == 2 && b.Author == "Frank Herbert"));
     }
 
-    [Fact]
+    [TestMethod]
     public void ReadUsers_LoadsUsersFromCsv()
     {
         var users = service.GetUsers();
 
-        Assert.Equal(2, users.Count);
-        Assert.Contains(users, u => u.Id == 1 && u.Name == "Alice");
-        Assert.Contains(users, u => u.Id == 2 && u.Email == "bob@example.com");
+        Assert.AreEqual(2, users.Count);
+        Assert.IsTrue(users.Any(u => u.Id == 1 && u.Name == "Alice"));
+        Assert.IsTrue(users.Any(u => u.Id == 2 && u.Email == "bob@example.com"));
     }
 
-    [Fact]
+    [TestMethod]
     public void AddBook_AddsBookAndAssignsNextId()
     {
         var book = new Book { Title = "Neuromancer", Author = "William Gibson", ISBN = "333" };
@@ -73,12 +75,12 @@ public class LibraryServiceTests : IDisposable
         service.AddBook(book);
         var books = service.GetBooks();
 
-        Assert.Equal(3, books.Count);
-        Assert.Equal(3, book.Id);
-        Assert.Contains(books, b => b.Id == 3 && b.Title == "Neuromancer");
+        Assert.AreEqual(3, books.Count);
+        Assert.AreEqual(3, book.Id);
+        Assert.IsTrue(books.Any(b => b.Id == 3 && b.Title == "Neuromancer"));
     }
 
-    [Fact]
+    [TestMethod]
     public void EditBook_ExistingBook_UpdatesFields()
     {
         var updatedBook = new Book { Id = 1, Title = "Nineteen Eighty-Four", Author = "George Orwell", ISBN = "999" };
@@ -86,12 +88,12 @@ public class LibraryServiceTests : IDisposable
         service.EditBook(updatedBook);
         var edited = service.GetBooks().First(b => b.Id == 1);
 
-        Assert.Equal("Nineteen Eighty-Four", edited.Title);
-        Assert.Equal("George Orwell", edited.Author);
-        Assert.Equal("999", edited.ISBN);
+        Assert.AreEqual("Nineteen Eighty-Four", edited.Title);
+        Assert.AreEqual("George Orwell", edited.Author);
+        Assert.AreEqual("999", edited.ISBN);
     }
 
-    [Fact]
+    [TestMethod]
     public void EditBook_NonexistentBook_DoesNothing()
     {
         var beforeCount = service.GetBooks().Count;
@@ -99,31 +101,31 @@ public class LibraryServiceTests : IDisposable
 
         service.EditBook(updatedBook);
 
-        Assert.Equal(beforeCount, service.GetBooks().Count);
-        Assert.DoesNotContain(service.GetBooks(), b => b.Id == 999);
+        Assert.AreEqual(beforeCount, service.GetBooks().Count);
+        Assert.IsFalse(service.GetBooks().Any(b => b.Id == 999));
     }
 
-    [Fact]
+    [TestMethod]
     public void DeleteBook_ExistingBook_RemovesBook()
     {
         service.DeleteBook(1);
         var books = service.GetBooks();
 
-        Assert.Single(books);
-        Assert.DoesNotContain(books, b => b.Id == 1);
+        Assert.AreEqual(1, books.Count);
+        Assert.IsFalse(books.Any(b => b.Id == 1));
     }
 
-    [Fact]
+    [TestMethod]
     public void DeleteBook_NonexistentBook_DoesNothing()
     {
         var beforeCount = service.GetBooks().Count;
 
         service.DeleteBook(999);
 
-        Assert.Equal(beforeCount, service.GetBooks().Count);
+        Assert.AreEqual(beforeCount, service.GetBooks().Count);
     }
 
-    [Fact]
+    [TestMethod]
     public void AddUser_AddsUserAndAssignsNextId()
     {
         var user = new User { Name = "Charlie", Email = "charlie@example.com" };
@@ -131,12 +133,12 @@ public class LibraryServiceTests : IDisposable
         service.AddUser(user);
         var users = service.GetUsers();
 
-        Assert.Equal(3, users.Count);
-        Assert.Equal(3, user.Id);
-        Assert.Contains(users, u => u.Id == 3 && u.Name == "Charlie");
+        Assert.AreEqual(3, users.Count);
+        Assert.AreEqual(3, user.Id);
+        Assert.IsTrue(users.Any(u => u.Id == 3 && u.Name == "Charlie"));
     }
 
-    [Fact]
+    [TestMethod]
     public void EditUser_ExistingUser_UpdatesFields()
     {
         var updatedUser = new User { Id = 1, Name = "Alice Smith", Email = "alice.smith@example.com" };
@@ -144,101 +146,102 @@ public class LibraryServiceTests : IDisposable
         service.EditUser(updatedUser);
         var edited = service.GetUsers().First(u => u.Id == 1);
 
-        Assert.Equal("Alice Smith", edited.Name);
-        Assert.Equal("alice.smith@example.com", edited.Email);
+        Assert.AreEqual("Alice Smith", edited.Name);
+        Assert.AreEqual("alice.smith@example.com", edited.Email);
     }
 
-    [Fact]
+    [TestMethod]
     public void DeleteUser_ExistingUser_RemovesUser()
     {
         service.DeleteUser(2);
         var users = service.GetUsers();
 
-        Assert.Single(users);
-        Assert.DoesNotContain(users, u => u.Id == 2);
+        Assert.AreEqual(1, users.Count);
+        Assert.IsFalse(users.Any(u => u.Id == 2));
     }
 
-    [Fact]
+    [TestMethod]
     public void BorrowBook_AvailableBook_ReturnsTrueAndMarksBorrowed()
     {
         var result = service.BorrowBook(1, 1);
 
-        Assert.True(result);
-        Assert.True(service.IsBookBorrowed(1));
-        Assert.Single(service.GetBorrowedBooksByUser(1));
+        Assert.IsTrue(result);
+        Assert.IsTrue(service.IsBookBorrowed(1));
+        Assert.AreEqual(1, service.GetBorrowedBooksByUser(1).Count);
     }
 
-    [Fact]
+    [TestMethod]
     public void BorrowBook_AlreadyBorrowed_ReturnsFalse()
     {
         service.BorrowBook(1, 1);
 
         var result = service.BorrowBook(2, 1);
 
-        Assert.False(result);
-        Assert.Single(service.GetBorrowedBooksByUser(1));
-        Assert.Empty(service.GetBorrowedBooksByUser(2));
+        Assert.IsFalse(result);
+        Assert.AreEqual(1, service.GetBorrowedBooksByUser(1).Count);
+        Assert.AreEqual(0, service.GetBorrowedBooksByUser(2).Count);
     }
 
-    [Fact]
+    [TestMethod]
     public void BorrowBook_InvalidUserOrBook_ReturnsFalse()
     {
-        Assert.False(service.BorrowBook(999, 1));
-        Assert.False(service.BorrowBook(1, 999));
+        Assert.IsFalse(service.BorrowBook(999, 1));
+        Assert.IsFalse(service.BorrowBook(1, 999));
     }
 
-    [Fact]
+    [TestMethod]
     public void ReturnBook_BorrowedBook_ReturnsTrueAndUnmarksBorrowed()
     {
         service.BorrowBook(1, 2);
 
         var result = service.ReturnBook(1, 2);
 
-        Assert.True(result);
-        Assert.False(service.IsBookBorrowed(2));
-        Assert.Empty(service.GetBorrowedBooksByUser(1));
-        Assert.Contains(service.GetBooks(), b => b.Id == 2);
+        Assert.IsTrue(result);
+        Assert.IsFalse(service.IsBookBorrowed(2));
+        Assert.AreEqual(0, service.GetBorrowedBooksByUser(1).Count);
+        Assert.IsTrue(service.GetBooks().Any(b => b.Id == 2));
     }
 
-    [Fact]
+    [TestMethod]
     public void ReturnBook_NotBorrowed_ReturnsFalse()
     {
         var result = service.ReturnBook(1, 2);
 
-        Assert.False(result);
+        Assert.IsFalse(result);
     }
 
-    [Fact]
+    [TestMethod]
     public void GetBorrowedBooksByUser_UserWithoutBorrowedBooks_ReturnsEmptyList()
     {
         var borrowed = service.GetBorrowedBooksByUser(99);
 
-        Assert.Empty(borrowed);
+        Assert.AreEqual(0, borrowed.Count);
     }
 
-    [Fact]
+    [TestMethod]
     public void DeleteBook_BorrowedBook_RemovesItFromBorrowedCollection()
     {
         service.BorrowBook(1, 1);
 
         service.DeleteBook(1);
 
-        Assert.False(service.IsBookBorrowed(1));
-        Assert.Empty(service.GetBorrowedBooksByUser(1));
+        Assert.IsFalse(service.IsBookBorrowed(1));
+        Assert.AreEqual(0, service.GetBorrowedBooksByUser(1).Count);
     }
 
-    [Fact]
+    [TestMethod]
     public void DeleteUser_BorrowingUser_RemovesBorrowedRecord()
     {
         service.BorrowBook(1, 2);
 
         service.DeleteUser(1);
 
-        Assert.Empty(service.GetBorrowedBooksByUser(1));
-        Assert.False(service.IsBookBorrowed(2));
+        Assert.AreEqual(0, service.GetBorrowedBooksByUser(1).Count);
+        Assert.IsFalse(service.IsBookBorrowed(2));
     }
 
-    public void Dispose()
+    [TestCleanup]
+    public void Cleanup()
     {
         if (Directory.Exists(tempRoot))
         {
