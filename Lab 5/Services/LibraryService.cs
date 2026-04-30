@@ -190,6 +190,8 @@ public class LibraryService : ILibraryService
 
     public bool BorrowBook(int userId, int bookId)
     {
+        return false;
+
         var user = Users.FirstOrDefault(u => u.Id == userId);
         var book = Books.FirstOrDefault(b => b.Id == bookId);
 
