@@ -1,6 +1,6 @@
 # Lab 6: Library Management System
 
-A Blazor web application for managing books, users, and borrowing activity, with an accompanying xUnit test project.
+A Blazor web application for managing books, users, and borrowing activity, with an accompanying MSTest test project.
 
 ## Overview
 
@@ -26,7 +26,7 @@ Lab 6/
 |   |-- Models/             Domain models
 |   |-- Services/           Library service logic
 |   `-- wwwroot/            Static assets
-|-- Lab 5.Tests/            xUnit test project
+|-- Lab 5.Tests/            MSTest test project
 |-- Lab 5.slnx              Solution file
 `-- README.md               Repository documentation
 ```
@@ -35,7 +35,7 @@ Lab 6/
 
 - ASP.NET Core Blazor
 - C#
-- xUnit
+- MSTest
 - .NET 8
 
 ## Getting Started
